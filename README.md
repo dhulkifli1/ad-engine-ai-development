@@ -1,3 +1,3 @@
 # adengineai
 
-Repo for ad engine ai
+Repo for ad engine AI
