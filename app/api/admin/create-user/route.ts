@@ -96,7 +96,10 @@ export async function POST(request: NextRequest) {
         password: password,
       }
 
-      const webhookUrl = "https://paidadvertising.app.n8n.cloud/webhook/a4f319cd-cd94-4a0f-b43e-f004301b4b0e"
+      const webhookUrl =
+        process.env.ENVIRONMENT === "sandbox"
+          ? "https://paidadvertising.app.n8n.cloud/webhook/a4f319cd-cd94-4a0f-b43e-f004301b4b0e"
+          : "https://paidadvertising.app.n8n.cloud/webhook/79192633-ea4d-4365-8925-586cbcc04cdb";
       console.log("[CreateUser API] Sending webhook to:", webhookUrl)
       console.log("[CreateUser API] Webhook payload:", { user_email: email, password: "[REDACTED]" })
 

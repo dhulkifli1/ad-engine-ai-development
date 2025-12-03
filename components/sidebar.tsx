@@ -371,10 +371,14 @@ export function Sidebar({
     if (!chatToRename || !newChatName.trim()) return
 
     setIsRenamingChat(true)
+    const renameChatUrl =
+      process.env.ENVIRONMENT === "sandbox"
+        ? "https://paidadvertising.app.n8n.cloud/webhook/beb573eb-99e9-45db-a5c4-9fa95a543a6c"
+        : "https://paidadvertising.app.n8n.cloud/webhook/40f70e05-b26e-4129-803a-d9969e8acabe";
 
     try {
       const response = await fetch(
-        "https://paidadvertising.app.n8n.cloud/webhook/beb573eb-99e9-45db-a5c4-9fa95a543a6c",
+        renameChatUrl,
         {
           method: "POST",
           headers: {
@@ -578,9 +582,13 @@ export function Sidebar({
     try {
       const allBrandChats = brandToDelete.folders.flatMap((folder) => folder.chats)
       const chatIds = allBrandChats.map((chat) => chat.id)
+      const deleteBrandUrl =
+        process.env.ENVIRONMENT === "sandbox"
+          ? "https://paidadvertising.app.n8n.cloud/webhook/d78287be-6c4a-40f7-bff8-4c8bf9935823"
+          : "https://paidadvertising.app.n8n.cloud/webhook/371a96cc-a4a2-4402-baca-18803e9ddb24";
 
       const response = await fetch(
-        "https://paidadvertising.app.n8n.cloud/webhook/d78287be-6c4a-40f7-bff8-4c8bf9935823",
+        deleteBrandUrl,
         {
           method: "POST",
           headers: {

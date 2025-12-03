@@ -5,7 +5,10 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     console.log("[v0] API: Received delete chat request:", body)
 
-    const webhookUrl = "https://paidadvertising.app.n8n.cloud/webhook/30919980-69f5-423b-b394-c6eaf9904b7c"
+    const webhookUrl =
+      process.env.ENVIRONMENT === "sandbox"
+        ? "https://paidadvertising.app.n8n.cloud/webhook/30919980-69f5-423b-b394-c6eaf9904b7c"
+        : "https://paidadvertising.app.n8n.cloud/webhook/0ddbe8f3-76ba-4c49-b83c-aa49eed842b2";
     console.log("[v0] API: Sending request to:", webhookUrl)
 
     // Forward the request to the n8n webhook
