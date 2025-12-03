@@ -8,9 +8,9 @@ export async function POST(request: NextRequest) {
     console.log("[v0] API: Received brand creation request:", body)
 
     const webhookUrl =
-      process.env.NEXT_PUBLIC_ENVIRONMENT === "sandbox"
-        ? "https://paidadvertising.app.n8n.cloud/webhook/705b4fe6-de4b-401b-870e-4fe1e6d043f7"
-        : "https://paidadvertising.app.n8n.cloud/webhook/26c5b336-b3a2-46d9-bae5-7f75eabda7fb";
+      process.env.NEXT_PUBLIC_ENVIRONMENT === "production"
+        ? "https://paidadvertising.app.n8n.cloud/webhook/26c5b336-b3a2-46d9-bae5-7f75eabda7fb"
+        : "https://paidadvertising.app.n8n.cloud/webhook/705b4fe6-de4b-401b-870e-4fe1e6d043f7";
     console.log("[v0] API: Sending request to:", webhookUrl)
 
     const response = await fetch(webhookUrl, {

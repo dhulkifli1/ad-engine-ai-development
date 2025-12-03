@@ -165,9 +165,9 @@ function ManageUsersPage() {
     const userToUpdate = users.find((u) => u.id === userId)
     const oldRole = userToUpdate?.role
     const updateRoleUrl =
-      process.env.NEXT_PUBLIC_ENVIRONMENT === "sandbox"
-        ? "https://paidadvertising.app.n8n.cloud/webhook/0d1b15c8-da98-4ed0-8e35-0510ca4c7cd7"
-        : "https://paidadvertising.app.n8n.cloud/webhook/c64488a5-e6da-4112-b7b1-1b4567ddcb7e";
+      process.env.NEXT_PUBLIC_ENVIRONMENT === "production"
+        ? "https://paidadvertising.app.n8n.cloud/webhook/c64488a5-e6da-4112-b7b1-1b4567ddcb7e"
+        : "https://paidadvertising.app.n8n.cloud/webhook/0d1b15c8-da98-4ed0-8e35-0510ca4c7cd7";
 
     try {
       const response = await fetch(
@@ -209,9 +209,9 @@ function ManageUsersPage() {
   }
 
   const suspendUserUrl =
-    process.env.NEXT_PUBLIC_ENVIRONMENT === "sandbox"
-      ? "https://paidadvertising.app.n8n.cloud/webhook/7ad1efd4-f4b5-407c-84b7-0c23317de467"
-      : "https://paidadvertising.app.n8n.cloud/webhook/044e02bb-3827-497b-8a15-b75fc9b95717";
+    process.env.NEXT_PUBLIC_ENVIRONMENT === "production"
+      ? "https://paidadvertising.app.n8n.cloud/webhook/044e02bb-3827-497b-8a15-b75fc9b95717"
+      : "https://paidadvertising.app.n8n.cloud/webhook/7ad1efd4-f4b5-407c-84b7-0c23317de467";
   const handleSuspendUser = async (user: User) => {
     try {
       const response = await fetch(
@@ -241,9 +241,9 @@ function ManageUsersPage() {
   }
 
   const activateUserUrl =
-    process.env.NEXT_PUBLIC_ENVIRONMENT === "sandbox"
-      ? "https://paidadvertising.app.n8n.cloud/webhook/bb3eaf39-7a34-4553-9e23-a0a5a5579064"
-      : "https://paidadvertising.app.n8n.cloud/webhook/da575104-315f-44f7-a645-72ba7354b71c";
+    process.env.NEXT_PUBLIC_ENVIRONMENT === "production"
+      ? "https://paidadvertising.app.n8n.cloud/webhook/da575104-315f-44f7-a645-72ba7354b71c"
+      : "https://paidadvertising.app.n8n.cloud/webhook/bb3eaf39-7a34-4553-9e23-a0a5a5579064";
   const handleActivateUser = async (user: User) => {
     try {
       const response = await fetch(
@@ -299,9 +299,9 @@ function ManageUsersPage() {
 
     setIsDeleting(true)
     const deleteUserUrl =
-      process.env.NEXT_PUBLIC_ENVIRONMENT === "sandbox"
-        ? "https://paidadvertising.app.n8n.cloud/webhook/51817fc5-8e84-458f-b137-25ce6f31950c"
-        : "https://paidadvertising.app.n8n.cloud/webhook/474594fe-04ca-40b7-8edc-b6eac7cfb460";
+      process.env.NEXT_PUBLIC_ENVIRONMENT === "production"
+        ? "https://paidadvertising.app.n8n.cloud/webhook/474594fe-04ca-40b7-8edc-b6eac7cfb460"
+        : "https://paidadvertising.app.n8n.cloud/webhook/51817fc5-8e84-458f-b137-25ce6f31950c";
 
     try {
       const response = await fetch(

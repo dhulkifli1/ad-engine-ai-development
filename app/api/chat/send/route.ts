@@ -120,9 +120,9 @@ export async function POST(req: NextRequest) {
 
         // Get the n8n webhook URL based on environment
         const n8nWebhookUrl =
-          process.env.NEXT_PUBLIC_ENVIRONMENT === "sandbox"
-            ? "https://paidadvertising.app.n8n.cloud/webhook/9216bb6c-cd2b-40c0-9a86-91123c00d197"
-            : "https://paidadvertising.app.n8n.cloud/webhook/f15da269-0ee5-4b08-ad92-ae7d14b0c0e2";
+          process.env.NEXT_PUBLIC_ENVIRONMENT === "production"
+            ? "https://paidadvertising.app.n8n.cloud/webhook/f15da269-0ee5-4b08-ad92-ae7d14b0c0e2"
+            : "https://paidadvertising.app.n8n.cloud/webhook/9216bb6c-cd2b-40c0-9a86-91123c00d197";
 
         console.log("[CHAT-API] Calling n8n webhook at:", n8nWebhookUrl);
 

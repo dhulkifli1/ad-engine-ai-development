@@ -9,9 +9,9 @@ export async function POST(request: NextRequest) {
     console.log("[v0] API: Received webhook payload:", body)
 
     const webhookUrl =
-      process.env.NEXT_PUBLIC_ENVIRONMENT === "sandbox"
-        ? "https://paidadvertising.app.n8n.cloud/webhook/9216bb6c-cd2b-40c0-9a86-91123c00d197"
-        : "https://paidadvertising.app.n8n.cloud/webhook/f15da269-0ee5-4b08-ad92-ae7d14b0c0e2";
+      process.env.NEXT_PUBLIC_ENVIRONMENT === "production"
+        ? "https://paidadvertising.app.n8n.cloud/webhook/f15da269-0ee5-4b08-ad92-ae7d14b0c0e2"
+        : "https://paidadvertising.app.n8n.cloud/webhook/9216bb6c-cd2b-40c0-9a86-91123c00d197";
     console.log("[v0] API: Sending request to:", webhookUrl)
 
     const timeout = setTimeout(() => controller.abort(), maxDuration * 1000)
