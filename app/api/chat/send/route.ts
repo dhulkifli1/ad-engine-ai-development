@@ -118,10 +118,19 @@ export async function POST(req: NextRequest) {
           maxDuration * 1000
         );
 
-        const response = await fetch("/api/webhook", {
+        // Get the n8n webhook URL based on environment
+        const n8nWebhookUrl =
+          process.env.ENVIRONMENT === "sandbox"
+            ? "https://paidadvertising.app.n8n.cloud/webhook/9216bb6c-cd2b-40c0-9a86-91123c00d197"
+            : "https://paidadvertising.app.n8n.cloud/webhook/f15da269-0ee5-4b08-ad92-ae7d14b0c0e2";
+
+        console.log("[CHAT-API] Calling n8n webhook at:", n8nWebhookUrl);
+
+        const response = await fetch(n8nWebhookUrl, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
+            "User-Agent": "AdEngine-Frontend/1.0",
           },
           body: JSON.stringify(payload),
           signal: controller.signal,
@@ -130,52 +139,48 @@ export async function POST(req: NextRequest) {
         clearTimeout(timeoutId);
 
         if (!response.ok) {
-          const errorData = await response.json();
+          const errorText = await response.text();
           console.error(
-            "[CHAT-API] Webhook request failed:",
+            "[CHAT-API] n8n webhook failed:",
             response.status,
-            errorData
+            response.statusText
           );
+          console.error("[CHAT-API] n8n error response:", errorText);
           return NextResponse.json(
             {
-              error: "Webhook execution failed",
-              details: errorData.error || errorData.details || "Unknown error",
+              error: "n8n webhook execution failed",
+              details: errorText || "Unknown error from n8n",
             },
             { status: response.status }
           );
         }
 
-        const webhookResponse = await response.json();
+        const responseText = await response.text();
         console.log(
-          "[CHAT-API] ✓ Webhook execution complete:",
-          webhookResponse
+          "[CHAT-API] ✓ n8n webhook execution complete:",
+          responseText
         );
 
-        // The webhook route returns: { success: true, data: responseData }
-        // where responseData is the text response from n8n
-        // We need to parse it and extract the AI output
+        // Parse the n8n response
         let aiOutput = null;
 
-        if (webhookResponse.success && webhookResponse.data) {
-          try {
-            // n8n returns JSON as a string, so we need to parse it
-            const parsedData = JSON.parse(webhookResponse.data);
-            aiOutput =
-              parsedData.content || parsedData.output || webhookResponse.data;
-          } catch (parseError) {
-            // If parsing fails, use the data as-is
-            console.log(
-              "[CHAT-API] Could not parse webhook data as JSON, using as-is"
-            );
-            aiOutput = webhookResponse.data;
-          }
+        try {
+          // n8n returns JSON as a string, so we need to parse it
+          const parsedData = JSON.parse(responseText);
+          aiOutput = parsedData.content || parsedData.output || responseText;
+        } catch (parseError) {
+          // If parsing fails, use the response text as-is
+          console.log(
+            "[CHAT-API] Could not parse n8n response as JSON, using as-is"
+          );
+          aiOutput = responseText;
         }
 
         if (!aiOutput) {
-          console.error("[CHAT-API] No AI output found in webhook response");
+          console.error("[CHAT-API] No AI output found in n8n response");
           return NextResponse.json(
             {
-              error: "No AI response returned from webhook",
+              error: "No AI response returned from n8n",
               details: "The webhook completed but returned no content",
             },
             { status: 500 }
