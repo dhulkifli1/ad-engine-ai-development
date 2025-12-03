@@ -372,7 +372,7 @@ export function Sidebar({
 
     setIsRenamingChat(true)
     const renameChatUrl =
-      process.env.ENVIRONMENT === "sandbox"
+      process.env.NEXT_PUBLIC_ENVIRONMENT === "sandbox"
         ? "https://paidadvertising.app.n8n.cloud/webhook/beb573eb-99e9-45db-a5c4-9fa95a543a6c"
         : "https://paidadvertising.app.n8n.cloud/webhook/40f70e05-b26e-4129-803a-d9969e8acabe";
 
@@ -583,7 +583,7 @@ export function Sidebar({
       const allBrandChats = brandToDelete.folders.flatMap((folder) => folder.chats)
       const chatIds = allBrandChats.map((chat) => chat.id)
       const deleteBrandUrl =
-        process.env.ENVIRONMENT === "sandbox"
+        process.env.NEXT_PUBLIC_ENVIRONMENT === "sandbox"
           ? "https://paidadvertising.app.n8n.cloud/webhook/d78287be-6c4a-40f7-bff8-4c8bf9935823"
           : "https://paidadvertising.app.n8n.cloud/webhook/371a96cc-a4a2-4402-baca-18803e9ddb24";
 
@@ -665,9 +665,15 @@ export function Sidebar({
         <div className="flex items-center justify-between mb-4 transition-all duration-150">
           <div className="flex items-center gap-2">
             <div className="w-6 h-6 flex items-center justify-center">
-              <img src="/images/design-mode/Lab%20logo%281%29%281%29.png" alt="Lab Logo" className="w-6 h-6" />
+              <img
+                src="/images/design-mode/Lab%20logo%281%29%281%29.png"
+                alt="Lab Logo"
+                className="w-6 h-6"
+              />
             </div>
-            <span className="text-sm font-medium text-white">PaidAdvertising.com</span>
+            <span className="text-sm font-medium text-white">
+              PaidAdvertising.com
+            </span>
           </div>
         </div>
 
@@ -706,8 +712,8 @@ export function Sidebar({
           {searchQuery && (
             <button
               onClick={() => {
-                setSearchQuery("")
-                searchInputRef.current?.focus()
+                setSearchQuery("");
+                searchInputRef.current?.focus();
               }}
               className="absolute right-3 top-1/2 transform -translate-y-1/2 text-[#B1B1B1] hover:text-white transition-colors"
             >
@@ -719,7 +725,11 @@ export function Sidebar({
 
       {/* Navigation - 16px spacing between sections */}
       <div
-        className={`flex-1 space-y-4 overflow-y-auto scrollbar-custom pb-4 ${isCardMinimized ? "max-h-[calc(100vh-280px)]" : "max-h-[calc(100vh-420px)]"}`}
+        className={`flex-1 space-y-4 overflow-y-auto scrollbar-custom pb-4 ${
+          isCardMinimized
+            ? "max-h-[calc(100vh-280px)]"
+            : "max-h-[calc(100vh-420px)]"
+        }`}
       >
         {/* My Brands */}
         <div className="transition-all duration-150">
@@ -728,9 +738,9 @@ export function Sidebar({
             <Dialog
               open={createBrandOpen}
               onOpenChange={(open) => {
-                setCreateBrandOpen(open)
+                setCreateBrandOpen(open);
                 if (!open) {
-                  setBrandError("")
+                  setBrandError("");
                 }
               }}
             >
@@ -746,7 +756,9 @@ export function Sidebar({
               <DialogContent className="bg-[#2a2a2a]/95 border border-white/10 text-white">
                 <div className="fixed inset-0 bg-black/60 backdrop-blur-[20px] -z-10" />
                 <DialogHeader>
-                  <DialogTitle className="text-white">Create New Brand</DialogTitle>
+                  <DialogTitle className="text-white">
+                    Create New Brand
+                  </DialogTitle>
                 </DialogHeader>
                 <form onSubmit={handleCreateBrand} className="space-y-4">
                   {brandError && (
@@ -797,7 +809,9 @@ export function Sidebar({
                         <Button
                           type="button"
                           variant="ghost"
-                          onClick={() => document.getElementById("brandLogo")?.click()}
+                          onClick={() =>
+                            document.getElementById("brandLogo")?.click()
+                          }
                           disabled={isCreatingBrand}
                           className="w-full text-white hover:bg-white/10 border border-white/20"
                         >
@@ -808,8 +822,11 @@ export function Sidebar({
                             type="button"
                             variant="ghost"
                             onClick={() => {
-                              setBrandFormData((prev) => ({ ...prev, logo: null }))
-                              setLogoPreview(null)
+                              setBrandFormData((prev) => ({
+                                ...prev,
+                                logo: null,
+                              }));
+                              setLogoPreview(null);
                             }}
                             disabled={isCreatingBrand}
                             className="w-full text-red-400 hover:bg-red-400/10 mt-2"
@@ -829,9 +846,12 @@ export function Sidebar({
                       id="brandName"
                       value={brandFormData.name}
                       onChange={(e) => {
-                        setBrandFormData((prev) => ({ ...prev, name: e.target.value }))
+                        setBrandFormData((prev) => ({
+                          ...prev,
+                          name: e.target.value,
+                        }));
                         if (brandError) {
-                          setBrandError("")
+                          setBrandError("");
                         }
                       }}
                       className="bg-black/20 border-white/20 text-white placeholder:text-gray-400 focus:border-white/40"
@@ -847,7 +867,12 @@ export function Sidebar({
                     <Textarea
                       id="brandDescription"
                       value={brandFormData.description}
-                      onChange={(e) => setBrandFormData((prev) => ({ ...prev, description: e.target.value }))}
+                      onChange={(e) =>
+                        setBrandFormData((prev) => ({
+                          ...prev,
+                          description: e.target.value,
+                        }))
+                      }
                       className="bg-black/20 border-white/20 text-white placeholder:text-gray-400 focus:border-white/40 min-h-[80px]"
                       placeholder="Enter brand description"
                       disabled={isCreatingBrand}
@@ -858,10 +883,14 @@ export function Sidebar({
                       type="button"
                       variant="ghost"
                       onClick={() => {
-                        setCreateBrandOpen(false)
-                        setBrandFormData({ name: "", description: "", logo: null })
-                        setLogoPreview(null)
-                        setBrandError("")
+                        setCreateBrandOpen(false);
+                        setBrandFormData({
+                          name: "",
+                          description: "",
+                          logo: null,
+                        });
+                        setLogoPreview(null);
+                        setBrandError("");
                       }}
                       disabled={isCreatingBrand}
                       className="flex-1 text-white hover:bg-white/10"
@@ -895,7 +924,13 @@ export function Sidebar({
             ) : brandsWithFolders.length === 0 ? (
               <div className="text-center py-4">
                 <div className="w-8 h-8 bg-blue-500/20 rounded-lg flex items-center justify-center mx-auto mb-3">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
                     <path
                       d="M12 2L2 7L12 12L22 7L12 2Z"
                       stroke="#60A5FA"
@@ -920,11 +955,13 @@ export function Sidebar({
                   </svg>
                 </div>
                 <p className="text-[#B1B1B1] text-sm mb-1">No brands yet</p>
-                <p className="text-[#777777] text-xs">Click + to create your first brand</p>
+                <p className="text-[#777777] text-xs">
+                  Click + to create your first brand
+                </p>
               </div>
             ) : (
               brandsWithFolders.map((brand) => {
-                const isBrandExpanded = expandedBrands[brand.id] === true
+                const isBrandExpanded = expandedBrands[brand.id] === true;
                 return (
                   <div key={brand.id} className="space-y-1">
                     {/* Brand Header */}
@@ -935,8 +972,13 @@ export function Sidebar({
                           : "text-white hover:text-white hover:bg-[#2a2a2a]"
                       }`}
                     >
-                      <div onClick={() => handleBrandFolderClick(brand.id)} className="flex items-center gap-2 flex-1">
-                        <div className="w-4 h-4 flex items-center justify-center">{getBrandAvatar(brand)}</div>
+                      <div
+                        onClick={() => handleBrandFolderClick(brand.id)}
+                        className="flex items-center gap-2 flex-1"
+                      >
+                        <div className="w-4 h-4 flex items-center justify-center">
+                          {getBrandAvatar(brand)}
+                        </div>
                         <span>{brand.name}</span>
                         {isCreatingBrandChat === brand.id ? (
                           <Loader2 className="w-3 h-3 animate-spin text-[#B1B1B1]" />
@@ -970,17 +1012,22 @@ export function Sidebar({
                     {isBrandExpanded && (
                       <div className="ml-4 space-y-1 animate-in slide-in-from-top-2 duration-200">
                         {brand.folders.map((folder) => {
-                          const folderKey = `${brand.id}-${folder.id}`
-                          const isFolderExpanded = expandedFolders[folderKey] !== false // Default to expanded
+                          const folderKey = `${brand.id}-${folder.id}`;
+                          const isFolderExpanded =
+                            expandedFolders[folderKey] !== false; // Default to expanded
                           return (
                             <div key={folder.id} className="space-y-1">
                               {/* Folder Header */}
                               <div className="flex items-center justify-between group text-sm py-1 cursor-pointer rounded px-2 transition-all duration-150 hover:bg-[#2a2a2a]/50">
                                 <div
-                                  onClick={() => toggleFolderExpansion(brand.id, folder.id)}
+                                  onClick={() =>
+                                    toggleFolderExpansion(brand.id, folder.id)
+                                  }
                                   className="flex items-center gap-2 flex-1"
                                 >
-                                  <span className="text-[#B1B1B1]">{folder.name}</span>
+                                  <span className="text-[#B1B1B1]">
+                                    {folder.name}
+                                  </span>
                                   {isFolderExpanded ? (
                                     <ChevronDown className="w-3 h-3 text-[#B1B1B1]" />
                                   ) : (
@@ -993,7 +1040,9 @@ export function Sidebar({
                               {isFolderExpanded && (
                                 <div className="ml-4 space-y-1 animate-in slide-in-from-top-2 duration-200">
                                   {folder.chats.length === 0 ? (
-                                    <div className="text-xs text-[#777777] py-1 px-2">No chats yet</div>
+                                    <div className="text-xs text-[#777777] py-1 px-2">
+                                      No chats yet
+                                    </div>
                                   ) : (
                                     folder.chats.map((chat) => (
                                       <div
@@ -1005,7 +1054,9 @@ export function Sidebar({
                                         }`}
                                       >
                                         <div
-                                          onClick={() => handleChatClick(chat.id, chat.title)}
+                                          onClick={() =>
+                                            handleChatClick(chat.id, chat.title)
+                                          }
                                           className="flex-1 truncate"
                                         >
                                           {chat.title}
@@ -1015,19 +1066,24 @@ export function Sidebar({
                                           modal={false}
                                           open={openDropdownMenu === chat.id}
                                           onOpenChange={(open) => {
-                                            if (!open && deletingMenuItem === chat.id) {
-                                              return
+                                            if (
+                                              !open &&
+                                              deletingMenuItem === chat.id
+                                            ) {
+                                              return;
                                             }
-                                            setOpenDropdownMenu(open ? chat.id : null)
+                                            setOpenDropdownMenu(
+                                              open ? chat.id : null
+                                            );
                                           }}
                                         >
                                           <DropdownMenuTrigger asChild>
                                             <button
                                               type="button"
                                               onClick={(e) => {
-                                                e.stopPropagation()
-                                                e.preventDefault()
-                                                setOpenDropdownMenu(chat.id)
+                                                e.stopPropagation();
+                                                e.preventDefault();
+                                                setOpenDropdownMenu(chat.id);
                                               }}
                                               aria-label="Chat options"
                                               title="Chat options"
@@ -1043,9 +1099,13 @@ export function Sidebar({
                                           >
                                             <DropdownMenuItem
                                               onClick={(e) => {
-                                                e.stopPropagation()
-                                                handleRenameChat(e, chat.id, chat.title)
-                                                setOpenDropdownMenu(null)
+                                                e.stopPropagation();
+                                                handleRenameChat(
+                                                  e,
+                                                  chat.id,
+                                                  chat.title
+                                                );
+                                                setOpenDropdownMenu(null);
                                               }}
                                               className="text-white hover:bg-white/5 focus:bg-white/5 focus:text-white cursor-pointer"
                                             >
@@ -1053,10 +1113,12 @@ export function Sidebar({
                                             </DropdownMenuItem>
                                             <DropdownMenuItem
                                               onClick={(e) => {
-                                                e.stopPropagation()
-                                                handleDeleteChat(e, chat.id)
+                                                e.stopPropagation();
+                                                handleDeleteChat(e, chat.id);
                                               }}
-                                              disabled={deletingChats.has(chat.id)}
+                                              disabled={deletingChats.has(
+                                                chat.id
+                                              )}
                                               className="text-red-400 hover:bg-red-400/10 focus:bg-red-400/10 focus:text-red-400 cursor-pointer"
                                             >
                                               {deletingMenuItem === chat.id ? (
@@ -1076,12 +1138,12 @@ export function Sidebar({
                                 </div>
                               )}
                             </div>
-                          )
+                          );
                         })}
                       </div>
                     )}
                   </div>
-                )
+                );
               })
             )}
           </div>
@@ -1094,12 +1156,14 @@ export function Sidebar({
           <div className="px-4 py-8 text-center transition-all duration-200">
             <MessageSquare className={`w-8 h-8 text-[#B1B1B1] mx-auto mb-3`} />
             <p className={`text-[#B1B1B1] text-sm mb-2`}>No chats yet</p>
-            <p className={`text-[#777777] text-xs`}>Start a conversation to see your chats organized by agent here</p>
+            <p className={`text-[#777777] text-xs`}>
+              Start a conversation to see your chats organized by agent here
+            </p>
           </div>
         ) : (
           <>
             {Object.entries(agentGroups).map(([agentName, agentChats]) => {
-              const isExpanded = expandedAgents[agentName] !== false
+              const isExpanded = expandedAgents[agentName] !== false;
               return (
                 <div key={agentName} className="transition-all duration-150">
                   <Button
@@ -1120,10 +1184,15 @@ export function Sidebar({
                         <div
                           key={chat.id}
                           className={`flex items-center justify-between group text-sm py-1 rounded px-2 cursor-pointer transition-all duration-150 hover:bg-[#2a2a2a] ${
-                            activeChat === chat.id ? "bg-[#2a2a2a] text-white" : "text-[#FAFAFA] hover:text-white"
+                            activeChat === chat.id
+                              ? "bg-[#2a2a2a] text-white"
+                              : "text-[#FAFAFA] hover:text-white"
                           }`}
                         >
-                          <div onClick={() => handleChatClick(chat.id, chat.title)} className="flex-1">
+                          <div
+                            onClick={() => handleChatClick(chat.id, chat.title)}
+                            className="flex-1"
+                          >
                             {chat.title}
                           </div>
                           {/* Regular chat dropdown - around line 850 */}
@@ -1132,18 +1201,18 @@ export function Sidebar({
                             open={openDropdownMenu === chat.id}
                             onOpenChange={(open) => {
                               if (!open && deletingMenuItem === chat.id) {
-                                return
+                                return;
                               }
-                              setOpenDropdownMenu(open ? chat.id : null)
+                              setOpenDropdownMenu(open ? chat.id : null);
                             }}
                           >
                             <DropdownMenuTrigger asChild>
                               <button
                                 type="button"
                                 onClick={(e) => {
-                                  e.stopPropagation()
-                                  e.preventDefault()
-                                  setOpenDropdownMenu(chat.id)
+                                  e.stopPropagation();
+                                  e.preventDefault();
+                                  setOpenDropdownMenu(chat.id);
                                 }}
                                 aria-label="Chat options"
                                 title="Chat options"
@@ -1159,9 +1228,9 @@ export function Sidebar({
                             >
                               <DropdownMenuItem
                                 onClick={(e) => {
-                                  e.stopPropagation()
-                                  handleRenameChat(e, chat.id, chat.title)
-                                  setOpenDropdownMenu(null)
+                                  e.stopPropagation();
+                                  handleRenameChat(e, chat.id, chat.title);
+                                  setOpenDropdownMenu(null);
                                 }}
                                 className="text-white hover:bg-white/5 focus:bg-white/5 focus:text-white cursor-pointer"
                               >
@@ -1169,8 +1238,8 @@ export function Sidebar({
                               </DropdownMenuItem>
                               <DropdownMenuItem
                                 onClick={(e) => {
-                                  e.stopPropagation()
-                                  handleDeleteChat(e, chat.id)
+                                  e.stopPropagation();
+                                  handleDeleteChat(e, chat.id);
                                 }}
                                 disabled={deletingChats.has(chat.id)}
                                 className="text-red-400 hover:bg-red-400/10 focus:bg-red-400/10 focus:text-red-400 cursor-pointer"
@@ -1191,7 +1260,7 @@ export function Sidebar({
                     </div>
                   )}
                 </div>
-              )
+              );
             })}
           </>
         )}
@@ -1203,7 +1272,109 @@ export function Sidebar({
         </div>
       </div>
 
+      <Dialog open={renameDialogOpen} onOpenChange={setRenameDialogOpen}>
+        <DialogContent className="bg-[#2a2a2a]/95 border border-white/10 text-white">
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-[20px] -z-10" />
+          <DialogHeader>
+            <DialogTitle className="text-white">Rename Chat</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleSubmitRename} className="space-y-4">
+            <div className="space-y-2">
+              <Input
+                ref={renameInputRef}
+                id="chatName"
+                value={newChatName}
+                onChange={(e) => setNewChatName(e.target.value)}
+                className="bg-black/20 border-white/20 text-white placeholder:text-gray-400 focus:border-white/40 focus-visible:ring-0 focus-visible:ring-offset-0 selection:bg-blue-500/50 selection:text-white"
+                placeholder="Enter new chat name"
+                required
+                disabled={isRenamingChat}
+              />
+            </div>
+            <div className="flex gap-2 pt-4">
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={() => {
+                  setRenameDialogOpen(false);
+                  setChatToRename(null);
+                  setNewChatName("");
+                }}
+                disabled={isRenamingChat}
+                className="flex-1 text-white hover:text-white hover:bg-white/10"
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                disabled={
+                  isRenamingChat ||
+                  !newChatName.trim() ||
+                  (chatToRename &&
+                    newChatName.trim() === chatToRename.currentName)
+                }
+                className="flex-1 bg-white text-black hover:bg-gray-200 disabled:bg-gray-600 disabled:text-gray-400 disabled:opacity-50"
+              >
+                {isRenamingChat ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                    Renaming...
+                  </>
+                ) : (
+                  "Rename"
+                )}
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Brand Confirmation Dialog */}
+      <Dialog open={deleteBrandOpen} onOpenChange={setDeleteBrandOpen}>
+        <DialogContent className="bg-[#2a2a2a]/95 border border-white/10 text-white">
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-[20px] -z-10" />
+          <DialogHeader>
+            <DialogTitle className="text-white">Delete Brand</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <p className="text-white">
+              Are you sure you want to delete brand{" "}
+              <strong>{brandToDelete?.name}</strong>?
+            </p>
+            <p className="text-[#B1B1B1] text-sm">
+              This action cannot be undone. All associated data will be
+              permanently removed.
+            </p>
+            <div className="flex gap-2 pt-4">
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={() => setDeleteBrandOpen(false)}
+                disabled={isDeletingBrand}
+                className="flex-1 text-white hover:bg-white/10"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={confirmDeleteBrand}
+                disabled={isDeletingBrand}
+                className="flex-1 bg-red-600 text-white hover:bg-red-700"
+              >
+                {isDeletingBrand ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                    Deleting...
+                  </>
+                ) : (
+                  "Delete Brand"
+                )}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       {/* Admin Controls */}
     </div>
-  )
+  );
 }

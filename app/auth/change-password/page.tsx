@@ -75,7 +75,7 @@ export default function ChangePasswordPage() {
 
       console.log("[ChangePassword] Password updated successfully")
       const webhookUrl =
-        process.env.ENVIRONMENT === "sandbox"
+        process.env.NEXT_PUBLIC_ENVIRONMENT === "sandbox"
           ? "https://paidadvertising.app.n8n.cloud/webhook/1ef91f1d-a9c5-4a9a-9f15-af3d7da05921"
           : "https://paidadvertising.app.n8n.cloud/webhook/28ed9bd7-6649-4111-8d58-716704024c94";
 
