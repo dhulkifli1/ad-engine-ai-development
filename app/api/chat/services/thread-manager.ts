@@ -64,6 +64,101 @@ export async function createOrUpdateThread(
   }
 }
 
+export async function runAssistantWithStreaming(
+  threadId: string,
+  assistantId: string,
+  vectorStoreId: string,
+  onChunk: (chunk: string) => void
+): Promise<AssistantResponse> {
+  console.log(
+    "[ThreadManager] Running assistant with streaming:",
+    assistantId,
+    "on thread:",
+    threadId
+  );
+
+  try {
+    // Create the run with streaming enabled
+    const stream = await openai.beta.threads.runs.stream(threadId, {
+      assistant_id: assistantId,
+      tool_resources: {
+        file_search: {
+          vector_store_ids: [vectorStoreId],
+        },
+      },
+    });
+
+    let fullResponse = "";
+    let messageId = "";
+    let runId = "";
+
+    // Handle streaming events
+    for await (const event of stream) {
+      // Log event type for debugging
+      console.log("[ThreadManager] Stream event:", event.event);
+
+      // Handle different event types
+      if (event.event === "thread.run.created") {
+        runId = event.data.id;
+        console.log("[ThreadManager] Run created:", runId);
+      }
+
+      // When text is being generated
+      if (event.event === "thread.message.delta") {
+        const delta = event.data.delta;
+
+        if (delta.content && delta.content.length > 0) {
+          for (const content of delta.content) {
+            if (content.type === "text" && content.text?.value) {
+              const chunk = content.text.value;
+              fullResponse += chunk;
+              onChunk(chunk); // Send chunk immediately
+            }
+          }
+        }
+      }
+
+      // When message is completed
+      if (event.event === "thread.message.completed") {
+        messageId = event.data.id;
+        console.log("[ThreadManager] Message completed:", messageId);
+      }
+
+      // Handle errors
+      if (event.event === "thread.run.failed") {
+        console.error("[ThreadManager] Run failed:", event.data);
+        throw new Error(
+          `Run failed: ${event.data.last_error?.message || "Unknown error"}`
+        );
+      }
+
+      if (event.event === "thread.run.cancelled") {
+        console.error("[ThreadManager] Run cancelled");
+        throw new Error("Run was cancelled");
+      }
+
+      if (event.event === "thread.run.expired") {
+        console.error("[ThreadManager] Run expired");
+        throw new Error("Run expired");
+      }
+    }
+
+    console.log("[ThreadManager] ✓ Assistant streaming completed");
+
+    return {
+      success: true,
+      thread_id: threadId,
+      assistant_response: fullResponse,
+      message_id: messageId,
+      run_id: runId,
+      timestamp: new Date().toISOString(),
+    };
+  } catch (error) {
+    console.error("[ThreadManager] Error in runAssistantWithStreaming:", error);
+    throw error;
+  }
+}
+
 export async function runAssistant(
   threadId: string,
   assistantId: string,

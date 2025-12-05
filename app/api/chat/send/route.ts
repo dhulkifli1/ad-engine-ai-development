@@ -1,54 +1,113 @@
 // app/api/chat/send/route.ts
-import { NextRequest, NextResponse } from 'next/server';
-import { executeAssistant } from '@/app/api/chat/agents/assistant';
-import { executeAIAgent } from '@/app/api/chat/agents/ai-agent';
-import { getChatHistory, createChat, saveUserMessage, saveAssistantMessage } from '@/app/api/chat/services/message-store';
-import { analyzeImage, extractTextFromPDF } from '@/app/api/chat/services/file-processor';
+import { NextRequest } from "next/server";
+import { executeAssistantWithStreaming } from "@/app/api/chat/agents/assistant";
+import { executeAIAgent } from "@/app/api/chat/agents/ai-agent";
+import {
+  getChatHistory,
+  createChat,
+  saveUserMessage,
+  saveAssistantMessage,
+} from "@/app/api/chat/services/message-store";
+import {
+  analyzeImage,
+  extractTextFromPDF,
+} from "@/app/api/chat/services/file-processor";
 
 export const maxDuration = 120;
 
 export async function POST(req: NextRequest) {
-  console.log('[CHAT-API] ========== NEW REQUEST ==========');
-  
-  try {
-    console.log('[CHAT-API] Step 1: Parsing request body...');
-    const payload = await req.json();
-    console.log('[CHAT-API] ✓ Payload parsed');
+  console.log("[CHAT-API] ========== NEW REQUEST ==========");
 
-    console.log('[CHAT-API] Step 2: Validating payload...');
+  try {
+    console.log("[CHAT-API] Step 1: Parsing request body...");
+    const payload = await req.json();
+    console.log("[CHAT-API] ✓ Payload parsed");
+
+    console.log("[CHAT-API] Step 2: Validating payload...");
     if (!payload.messages || !payload.chats) {
-      console.error('[CHAT-API] ✗ Invalid payload structure');
-      return NextResponse.json(
-        { error: 'Invalid payload: messages and chats are required' },
-        { status: 400 }
+      console.error("[CHAT-API] ✗ Invalid payload structure");
+      return new Response(
+        JSON.stringify({
+          error: "Invalid payload: messages and chats are required",
+        }),
+        { status: 400, headers: { "Content-Type": "application/json" } }
       );
     }
-    console.log('[CHAT-API] ✓ Payload valid');
+    console.log("[CHAT-API] ✓ Payload valid");
 
     const useAssistant = !!payload.assistant_id;
-    console.log('[CHAT-API] Step 3: Agent type:', useAssistant ? 'Assistant API' : 'AI Agent');
+    console.log(
+      "[CHAT-API] Step 3: Agent type:",
+      useAssistant ? "Assistant API" : "AI Agent"
+    );
 
     if (useAssistant) {
-      console.log('[CHAT-API] Executing Assistant Agent...');
-      
-      try {
-        const response = await executeAssistant(payload);
-        console.log('[CHAT-API] ✓ Assistant execution complete');
+      console.log("[CHAT-API] Executing Assistant with streaming...");
 
-        return NextResponse.json({
-          status: 'Success',
-          output: response.assistant_response,
-          thread_id: response.thread_id,
-          message_id: response.message_id,
+      try {
+        const encoder = new TextEncoder();
+
+        // Create streaming response
+        const stream = new ReadableStream({
+          async start(controller) {
+            try {
+              // Call the streaming assistant
+              const response = await executeAssistantWithStreaming(
+                payload,
+                // onChunk callback - send each chunk immediately
+                (chunk: string) => {
+                  const data = {
+                    type: "chunk",
+                    content: chunk,
+                  };
+                  controller.enqueue(
+                    encoder.encode(`data: ${JSON.stringify(data)}\n\n`)
+                  );
+                }
+              );
+
+              console.log("[CHAT-API] ✓ Assistant streaming complete");
+
+              // Send completion event with metadata
+              const doneData = {
+                type: "done",
+                thread_id: response.thread_id,
+                message_id: response.message_id,
+                run_id: response.run_id,
+              };
+              controller.enqueue(
+                encoder.encode(`data: ${JSON.stringify(doneData)}\n\n`)
+              );
+              controller.close();
+            } catch (error) {
+              console.error("[CHAT-API] ✗ Assistant streaming failed:", error);
+              const errorData = {
+                type: "error",
+                error: error instanceof Error ? error.message : "Unknown error",
+              };
+              controller.enqueue(
+                encoder.encode(`data: ${JSON.stringify(errorData)}\n\n`)
+              );
+              controller.close();
+            }
+          },
+        });
+
+        return new Response(stream, {
+          headers: {
+            "Content-Type": "text/event-stream",
+            "Cache-Control": "no-cache",
+            Connection: "keep-alive",
+          },
         });
       } catch (error) {
-        console.error('[CHAT-API] ✗ Assistant execution failed:', error);
-        return NextResponse.json(
-          { 
-            error: 'Assistant execution failed',
-            details: error instanceof Error ? error.message : 'Unknown error',
-          },
-          { status: 500 }
+        console.error("[CHAT-API] ✗ Assistant execution failed:", error);
+        return new Response(
+          JSON.stringify({
+            error: "Assistant execution failed",
+            details: error instanceof Error ? error.message : "Unknown error",
+          }),
+          { status: 500, headers: { "Content-Type": "application/json" } }
         );
       }
     } else {
@@ -146,30 +205,28 @@ export async function POST(req: NextRequest) {
             response.statusText
           );
           console.error("[CHAT-API] n8n error response:", errorText);
-          return NextResponse.json(
-            {
+          return new Response(
+            JSON.stringify({
               error: "n8n webhook execution failed",
               details: errorText || "Unknown error from n8n",
-            },
-            { status: response.status }
+            }),
+            {
+              status: response.status,
+              headers: { "Content-Type": "application/json" },
+            }
           );
         }
 
         const responseText = await response.text();
-        console.log(
-          "[CHAT-API] ✓ n8n webhook execution complete:",
-          responseText
-        );
+        console.log("[CHAT-API] ✓ n8n webhook execution complete");
 
         // Parse the n8n response
         let aiOutput = null;
 
         try {
-          // n8n returns JSON as a string, so we need to parse it
           const parsedData = JSON.parse(responseText);
           aiOutput = parsedData.content || parsedData.output || responseText;
         } catch (parseError) {
-          // If parsing fails, use the response text as-is
           console.log(
             "[CHAT-API] Could not parse n8n response as JSON, using as-is"
           );
@@ -178,49 +235,52 @@ export async function POST(req: NextRequest) {
 
         if (!aiOutput) {
           console.error("[CHAT-API] No AI output found in n8n response");
-          return NextResponse.json(
-            {
+          return new Response(
+            JSON.stringify({
               error: "No AI response returned from n8n",
               details: "The webhook completed but returned no content",
-            },
-            { status: 500 }
+            }),
+            { status: 500, headers: { "Content-Type": "application/json" } }
           );
         }
 
-        return NextResponse.json({
-          status: "Success",
-          output: aiOutput,
-        });
+        return new Response(
+          JSON.stringify({
+            status: "Success",
+            output: aiOutput,
+          }),
+          { headers: { "Content-Type": "application/json" } }
+        );
       } catch (error) {
         console.error("[CHAT-API] ✗ AI Agent webhook execution failed:", error);
 
         if (error instanceof Error && error.name === "AbortError") {
-          return NextResponse.json(
-            {
+          return new Response(
+            JSON.stringify({
               error: "AI Agent execution timed out",
               details: `Request took longer than ${maxDuration} seconds`,
-            },
-            { status: 504 }
+            }),
+            { status: 504, headers: { "Content-Type": "application/json" } }
           );
         }
 
-        return NextResponse.json(
-          {
+        return new Response(
+          JSON.stringify({
             error: "AI Agent execution failed",
             details: error instanceof Error ? error.message : "Unknown error",
-          },
-          { status: 500 }
+          }),
+          { status: 500, headers: { "Content-Type": "application/json" } }
         );
       }
     }
   } catch (error) {
-    console.error('[CHAT-API] ✗ Top-level error:', error);
-    return NextResponse.json(
-      { 
-        error: 'Failed to process chat request',
-        details: error instanceof Error ? error.message : 'Unknown error',
-      },
-      { status: 500 }
+    console.error("[CHAT-API] ✗ Top-level error:", error);
+    return new Response(
+      JSON.stringify({
+        error: "Failed to process chat request",
+        details: error instanceof Error ? error.message : "Unknown error",
+      }),
+      { status: 500, headers: { "Content-Type": "application/json" } }
     );
   }
 }
