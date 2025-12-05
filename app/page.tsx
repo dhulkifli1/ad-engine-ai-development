@@ -692,57 +692,8 @@ export default function HomePage() {
         );
       }
 
-      // Create empty assistant message that will be filled by streaming
-      const aiMessageId = generateUUID();
-      const emptyAiMessage = {
-        id: aiMessageId,
-        chat_id: chatId,
-        content: "", // Empty content - will be filled by streaming
-        role: "assistant" as const,
-        created_at: new Date().toISOString(),
-      };
-
-      // Add empty assistant message to UI
-      setChats((prevChats) => {
-        const existingChatIndex = prevChats.findIndex((c) => c.id === chatId);
-        if (existingChatIndex >= 0) {
-          const updatedChats = [...prevChats];
-          updatedChats[existingChatIndex] = {
-            ...updatedChats[existingChatIndex],
-            messages: [
-              ...updatedChats[existingChatIndex].messages,
-              emptyAiMessage,
-            ],
-          };
-          return updatedChats;
-        }
-        return prevChats;
-      });
-
-      if (selectedBrand) {
-        setBrandsWithFolders((prev) =>
-          prev.map((brand) => {
-            if (brand.id === selectedBrand) {
-              return {
-                ...brand,
-                folders: brand.folders.map((folder) => ({
-                  ...folder,
-                  chats: folder.chats.map((chat) =>
-                    chat.id === chatId
-                      ? {
-                          ...chat,
-                          messages: [...(chat.messages || []), emptyAiMessage],
-                        }
-                      : chat
-                  ),
-                })),
-              };
-            }
-            return brand;
-          })
-        );
-      }
-
+      // IMPORTANT: Set AI responding state (this shows "Thinking..." box)
+      // DON'T create empty assistant message yet
       setAiRespondingChats((prev) => new Set(prev).add(chatId));
 
       const webhookPayload = {
@@ -770,8 +721,8 @@ export default function HomePage() {
           attachments_names: attachmentsNames || [],
         },
         assistant_id: assistantId,
-        thread_id: threadId, // Include thread_id at root level for API
-        vector_store_id: vsId, // Include vs_id at root level for API
+        thread_id: threadId,
+        vector_store_id: vsId,
       };
 
       console.log(
@@ -779,58 +730,132 @@ export default function HomePage() {
         webhookPayload
       );
 
+      // Track if we've received the first chunk (to create message box)
+      let hasReceivedFirstChunk = false;
+      const aiMessageId = generateUUID();
+
       try {
         await sendMessageWithStreaming(
           webhookPayload,
           // onChunk - called for each piece of text as it arrives
           (chunk: string) => {
-            setChats((prevChats) => {
-              const existingChatIndex = prevChats.findIndex(
-                (c) => c.id === chatId
+            // If this is the first chunk, create the empty assistant message and hide "Thinking..."
+            if (!hasReceivedFirstChunk) {
+              hasReceivedFirstChunk = true;
+              console.log(
+                "[v0] First chunk received, creating assistant message"
               );
-              if (existingChatIndex >= 0) {
-                const updatedChats = [...prevChats];
-                const currentChat = updatedChats[existingChatIndex];
 
-                updatedChats[existingChatIndex] = {
-                  ...currentChat,
-                  messages: currentChat.messages.map((msg) =>
-                    msg.id === aiMessageId
-                      ? { ...msg, content: msg.content + chunk }
-                      : msg
-                  ),
-                };
-                return updatedChats;
+              const emptyAiMessage = {
+                id: aiMessageId,
+                chat_id: chatId,
+                content: chunk, // Start with first chunk
+                role: "assistant" as const,
+                created_at: new Date().toISOString(),
+              };
+
+              // Add assistant message to UI
+              setChats((prevChats) => {
+                const existingChatIndex = prevChats.findIndex(
+                  (c) => c.id === chatId
+                );
+                if (existingChatIndex >= 0) {
+                  const updatedChats = [...prevChats];
+                  updatedChats[existingChatIndex] = {
+                    ...updatedChats[existingChatIndex],
+                    messages: [
+                      ...updatedChats[existingChatIndex].messages,
+                      emptyAiMessage,
+                    ],
+                  };
+                  return updatedChats;
+                }
+                return prevChats;
+              });
+
+              if (selectedBrand) {
+                setBrandsWithFolders((prev) =>
+                  prev.map((brand) => {
+                    if (brand.id === selectedBrand) {
+                      return {
+                        ...brand,
+                        folders: brand.folders.map((folder) => ({
+                          ...folder,
+                          chats: folder.chats.map((chat) =>
+                            chat.id === chatId
+                              ? {
+                                  ...chat,
+                                  messages: [
+                                    ...(chat.messages || []),
+                                    emptyAiMessage,
+                                  ],
+                                }
+                              : chat
+                          ),
+                        })),
+                      };
+                    }
+                    return brand;
+                  })
+                );
               }
-              return prevChats;
-            });
 
-            if (selectedBrand) {
-              setBrandsWithFolders((prev) =>
-                prev.map((brand) => {
-                  if (brand.id === selectedBrand) {
-                    return {
-                      ...brand,
-                      folders: brand.folders.map((folder) => ({
-                        ...folder,
-                        chats: folder.chats.map((chat) =>
-                          chat.id === chatId
-                            ? {
-                                ...chat,
-                                messages: chat.messages.map((msg) =>
-                                  msg.id === aiMessageId
-                                    ? { ...msg, content: msg.content + chunk }
-                                    : msg
-                                ),
-                              }
-                            : chat
-                        ),
-                      })),
-                    };
-                  }
-                  return brand;
-                })
-              );
+              // Remove "Thinking..." state
+              setAiRespondingChats((prev) => {
+                const next = new Set(prev);
+                next.delete(chatId);
+                return next;
+              });
+            } else {
+              // Subsequent chunks - append to existing message
+              setChats((prevChats) => {
+                const existingChatIndex = prevChats.findIndex(
+                  (c) => c.id === chatId
+                );
+                if (existingChatIndex >= 0) {
+                  const updatedChats = [...prevChats];
+                  const currentChat = updatedChats[existingChatIndex];
+
+                  updatedChats[existingChatIndex] = {
+                    ...currentChat,
+                    messages: currentChat.messages.map((msg) =>
+                      msg.id === aiMessageId
+                        ? { ...msg, content: msg.content + chunk }
+                        : msg
+                    ),
+                  };
+                  return updatedChats;
+                }
+                return prevChats;
+              });
+
+              if (selectedBrand) {
+                setBrandsWithFolders((prev) =>
+                  prev.map((brand) => {
+                    if (brand.id === selectedBrand) {
+                      return {
+                        ...brand,
+                        folders: brand.folders.map((folder) => ({
+                          ...folder,
+                          chats: folder.chats.map((chat) =>
+                            chat.id === chatId
+                              ? {
+                                  ...chat,
+                                  messages: chat.messages.map((msg) =>
+                                    msg.id === aiMessageId
+                                      ? { ...msg, content: msg.content + chunk }
+                                      : msg
+                                  ),
+                                }
+                              : chat
+                          ),
+                        })),
+                      };
+                    }
+                    return brand;
+                  })
+                );
+              }
             }
           },
           // onComplete - called when streaming finishes
@@ -874,6 +899,7 @@ export default function HomePage() {
               }, 1500);
             }
 
+            // Final cleanup - ensure AI responding state is removed
             setAiRespondingChats((prev) => {
               const next = new Set(prev);
               next.delete(chatId);
@@ -932,48 +958,50 @@ export default function HomePage() {
               setIsCreatingBrandChat(null);
             }
 
-            // Remove the failed AI message and keep user message
-            setChats((prevChats) => {
-              const existingChatIndex = prevChats.findIndex(
-                (c) => c.id === chatId
-              );
-              if (existingChatIndex >= 0) {
-                const updatedChats = [...prevChats];
-                updatedChats[existingChatIndex] = {
-                  ...updatedChats[existingChatIndex],
-                  messages: updatedChats[existingChatIndex].messages.filter(
-                    (m) => m.id !== aiMessageId
-                  ),
-                };
-                return updatedChats;
-              }
-              return prevChats;
-            });
+            // If we created a message, remove it
+            if (hasReceivedFirstChunk) {
+              setChats((prevChats) => {
+                const existingChatIndex = prevChats.findIndex(
+                  (c) => c.id === chatId
+                );
+                if (existingChatIndex >= 0) {
+                  const updatedChats = [...prevChats];
+                  updatedChats[existingChatIndex] = {
+                    ...updatedChats[existingChatIndex],
+                    messages: updatedChats[existingChatIndex].messages.filter(
+                      (m) => m.id !== aiMessageId
+                    ),
+                  };
+                  return updatedChats;
+                }
+                return prevChats;
+              });
 
-            if (selectedBrand) {
-              setBrandsWithFolders((prev) =>
-                prev.map((brand) => {
-                  if (brand.id === selectedBrand) {
-                    return {
-                      ...brand,
-                      folders: brand.folders.map((folder) => ({
-                        ...folder,
-                        chats: folder.chats.map((chat) =>
-                          chat.id === chatId
-                            ? {
-                                ...chat,
-                                messages: chat.messages.filter(
-                                  (m) => m.id !== aiMessageId
-                                ),
-                              }
-                            : chat
-                        ),
-                      })),
-                    };
-                  }
-                  return brand;
-                })
-              );
+              if (selectedBrand) {
+                setBrandsWithFolders((prev) =>
+                  prev.map((brand) => {
+                    if (brand.id === selectedBrand) {
+                      return {
+                        ...brand,
+                        folders: brand.folders.map((folder) => ({
+                          ...folder,
+                          chats: folder.chats.map((chat) =>
+                            chat.id === chatId
+                              ? {
+                                  ...chat,
+                                  messages: chat.messages.filter(
+                                    (m) => m.id !== aiMessageId
+                                  ),
+                                }
+                              : chat
+                          ),
+                        })),
+                      };
+                    }
+                    return brand;
+                  })
+                );
+              }
             }
 
             const errorMessage = `We encountered an issue: ${error}\n\nThis is likely temporary. Please try again in a moment. If the problem continues, our support team is here to help.`;
@@ -996,46 +1024,50 @@ export default function HomePage() {
           setIsCreatingBrandChat(null);
         }
 
-        // Remove the failed AI message
-        setChats((prevChats) => {
-          const existingChatIndex = prevChats.findIndex((c) => c.id === chatId);
-          if (existingChatIndex >= 0) {
-            const updatedChats = [...prevChats];
-            updatedChats[existingChatIndex] = {
-              ...updatedChats[existingChatIndex],
-              messages: updatedChats[existingChatIndex].messages.filter(
-                (m) => m.id !== aiMessageId
-              ),
-            };
-            return updatedChats;
-          }
-          return prevChats;
-        });
+        // If we created a message, remove it
+        if (hasReceivedFirstChunk) {
+          setChats((prevChats) => {
+            const existingChatIndex = prevChats.findIndex(
+              (c) => c.id === chatId
+            );
+            if (existingChatIndex >= 0) {
+              const updatedChats = [...prevChats];
+              updatedChats[existingChatIndex] = {
+                ...updatedChats[existingChatIndex],
+                messages: updatedChats[existingChatIndex].messages.filter(
+                  (m) => m.id !== aiMessageId
+                ),
+              };
+              return updatedChats;
+            }
+            return prevChats;
+          });
 
-        if (selectedBrand) {
-          setBrandsWithFolders((prev) =>
-            prev.map((brand) => {
-              if (brand.id === selectedBrand) {
-                return {
-                  ...brand,
-                  folders: brand.folders.map((folder) => ({
-                    ...folder,
-                    chats: folder.chats.map((chat) =>
-                      chat.id === chatId
-                        ? {
-                            ...chat,
-                            messages: chat.messages.filter(
-                              (m) => m.id !== aiMessageId
-                            ),
-                          }
-                        : chat
-                    ),
-                  })),
-                };
-              }
-              return brand;
-            })
-          );
+          if (selectedBrand) {
+            setBrandsWithFolders((prev) =>
+              prev.map((brand) => {
+                if (brand.id === selectedBrand) {
+                  return {
+                    ...brand,
+                    folders: brand.folders.map((folder) => ({
+                      ...folder,
+                      chats: folder.chats.map((chat) =>
+                        chat.id === chatId
+                          ? {
+                              ...chat,
+                              messages: chat.messages.filter(
+                                (m) => m.id !== aiMessageId
+                              ),
+                            }
+                          : chat
+                      ),
+                    })),
+                  };
+                }
+                return brand;
+              })
+            );
+          }
         }
 
         const errorMessage = `Connection issue: ${
